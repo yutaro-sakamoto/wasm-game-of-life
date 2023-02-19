@@ -2,6 +2,13 @@ mod utils;
 
 use std::fmt;
 use wasm_bindgen::prelude::*;
+extern crate web_sys;
+
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -61,6 +68,14 @@ impl Universe {
                 let cell = self.cells[idx];
                 let live_neighbors = self.live_neighbor_count(row, col);
 
+                log!(
+                    "cell[{}, {}] is initially {:?} and has {} live neighbors",
+                    row,
+                    col,
+                    cell,
+                    live_neighbors
+                );
+
                 let next_cell = match (cell, live_neighbors) {
                     (Cell::Alive, x) if x < 2 => Cell::Dead,
                     (Cell::Alive, 2) | (Cell::Alive, 3) => Cell::Alive,
@@ -68,6 +83,8 @@ impl Universe {
                     (Cell::Dead, 3) => Cell::Alive,
                     (otherwise, _) => otherwise,
                 };
+
+                log!("    it becomes {:?}", next_cell);
                 next[idx] = next_cell;
             }
         }
@@ -75,6 +92,7 @@ impl Universe {
     }
 
     pub fn new() -> Universe {
+        utils::set_panic_hook();
         let width = 64;
         let height = 64;
 
